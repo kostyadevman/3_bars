@@ -25,7 +25,7 @@ $ pip install -r requirements.txt
 
 ```bash
 
-$ python bars.py # possibly requires call of python3 executive instead of just python
+$ python bars.py <path to file> # possibly requires call of python3 executive instead of just python
 Enter your longtude: 37.6
 Enter your latutude: 55.7
 The biggest bar:
