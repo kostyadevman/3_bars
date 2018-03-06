@@ -1,68 +1,75 @@
 import json
 import os
-from geopy.distance import vincenty as distance
+from geopy.distance import vincenty
+import sys
 
 
 def load_data(filepath):
     with open(filepath, 'r') as infile:
         json_content = json.loads(infile.read())
-    return json_content
+    return json_content['features']
 
 
 def get_biggest_bar(json_content):
-    bg_bar = \
-        max(json_content['features'],
-            key=lambda bar: bar['properties']['Attributes']['SeatsCount'])
-    return bg_bar
+    biggest_bar = max(
+        json_content,
+        key=lambda bar: bar['properties']['Attributes']['SeatsCount']
+    )
+    return biggest_bar
 
 def get_smallest_bar(json_content):
-    sm_bar = \
-        min(json_content['features'],
-            key=lambda bar: bar['properties']['Attributes']['SeatsCount'])
-    return sm_bar
+    smallest_bar = min(
+        json_content,
+        key=lambda bar: bar['properties']['Attributes']['SeatsCount']
+    )
+    return smallest_bar
+
+def get_distance(bar, coordinates):
+    return vincenty(bar['geometry']['coordinates'], coordinates).meters
 
 
-def get_closest_bar(json_content, longitude, latitude):
-    cl_bar = \
-        min(json_content['features'],
-            key=lambda bar: distance(bar['geometry']['coordinates'],
-                                     (longitude, latitude)).km)
-    return cl_bar
+
+def get_closest_bar(json_content, coordinates):
+    closest_bar = min(
+        json_content,
+        key=lambda bar: get_distance(bar, coordinates)
+    )
+    return closest_bar
+
+
+def print_bar_info(bar, coordinates):
+    name = bar['properties']['Attributes']['Name']
+    seats_count = bar['properties']['Attributes']['SeatsCount']
+    way = get_distance(bar, coordinates)
+    print('Name: {}'.format(name))
+    print('Seats count: {}'.format(seats_count))
+    print('Distance to bar: {} meters'.format(round(way, 2)))
+    print('\n')
 
 
 if __name__ == '__main__':
-    input_file = 'bars.json'
-    if not os.path.exists(input_file):
-        exit("File {} doesn't exists")
-    json_content = load_data('bars.json')
+    if not sys.argv[1:] or not os.path.isfile(sys.argv[1]):
+        exit('Usage: python bars.py <path to file>')
+    input_file = sys.argv[1]
+
+    json_content = load_data(input_file)
     if json_content:
         try:
             my_longtude = float(input('Enter your longtude: '))
             my_latitude = float(input('Enter your latutude: '))
         except ValueError:
-            exit("Longtude and latitude should be a numbers")
+            exit('Longtude and latitude should be a numbers')
+    coordinates = (my_longtude, my_latitude)
     biggest_bar = get_biggest_bar(json_content)
     smallest_bar = get_smallest_bar(json_content)
-    closest_bar = get_closest_bar(json_content, my_longtude, my_latitude)
+    closest_bar = get_closest_bar(json_content, coordinates)
 
-    name_biggest_bar = \
-        biggest_bar['properties']['Attributes']['Name']
-    seats_count_biggest_bar = \
-        biggest_bar['properties']['Attributes']['SeatsCount']
 
-    name_smallest_bar = \
-        smallest_bar['properties']['Attributes']['Name']
-    seats_count_smallest_bar = \
-        smallest_bar['properties']['Attributes']['SeatsCount']
+    print('The biggest bar:' )
+    print_bar_info(biggest_bar, coordinates)
 
-    name_closest_bar = \
-        closest_bar['properties']['Attributes']['Name']
-    distance_closet_bar = distance(closest_bar['geometry']['coordinates'],
-                                   (my_longtude, my_latitude)).meters
+    print('The smallest bar: ')
+    print_bar_info(smallest_bar, coordinates)
 
-    print(u'The biggest bar: {} with {} seats'
-          .format(name_biggest_bar, seats_count_biggest_bar))
-    print(u'The smallest bar: {} with {} seats'
-          .format(name_smallest_bar, seats_count_smallest_bar))
-    print(u'The closest bar: {} distance: {} meters'
-          .format(name_closest_bar, round(distance_closet_bar, 2)))
+    print('The closest bar: ')
+    print_bar_info(closest_bar, coordinates)
