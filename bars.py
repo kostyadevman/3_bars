@@ -38,10 +38,10 @@ def get_closest_bar(json_content, coordinates):
 
 
 def print_bar_info(bar, coordinates):
-    name = bar['properties']['Attributes']['Name']
+    bar_name = bar['properties']['Attributes']['Name']
     seats_count = bar['properties']['Attributes']['SeatsCount']
     way = get_distance(bar, coordinates)
-    print('Name: {}'.format(name))
+    print('Name: {}'.format(bar_name))
     print('Seats count: {}'.format(seats_count))
     print('Distance to bar: {} meters'.format(round(way, 2)))
     print('\n')
