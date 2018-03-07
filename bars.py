@@ -6,32 +6,33 @@ import sys
 
 def load_data(filepath):
     with open(filepath, 'r') as infile:
-        json_content = json.loads(infile.read())
-    return json_content['features']
+        bars = json.loads(infile.read())
+    return bars['features']
 
 
-def get_biggest_bar(json_content):
+def get_biggest_bar(bars):
     biggest_bar = max(
-        json_content,
+        bars,
         key=lambda bar: bar['properties']['Attributes']['SeatsCount']
     )
     return biggest_bar
 
-def get_smallest_bar(json_content):
+
+def get_smallest_bar(bars):
     smallest_bar = min(
-        json_content,
+        bars,
         key=lambda bar: bar['properties']['Attributes']['SeatsCount']
     )
     return smallest_bar
+
 
 def get_distance(bar, coordinates):
     return vincenty(bar['geometry']['coordinates'], coordinates).meters
 
 
-
-def get_closest_bar(json_content, coordinates):
+def get_closest_bar(bars, coordinates):
     closest_bar = min(
-        json_content,
+        bars,
         key=lambda bar: get_distance(bar, coordinates)
     )
     return closest_bar
@@ -52,20 +53,19 @@ if __name__ == '__main__':
         exit('Usage: python bars.py <path to file>')
     input_file = sys.argv[1]
 
-    json_content = load_data(input_file)
-    if json_content:
+    bars = load_data(input_file)
+    if bars:
         try:
             my_longtude = float(input('Enter your longtude: '))
             my_latitude = float(input('Enter your latutude: '))
         except ValueError:
             exit('Longtude and latitude should be a numbers')
     coordinates = (my_longtude, my_latitude)
-    biggest_bar = get_biggest_bar(json_content)
-    smallest_bar = get_smallest_bar(json_content)
-    closest_bar = get_closest_bar(json_content, coordinates)
+    biggest_bar = get_biggest_bar(bars)
+    smallest_bar = get_smallest_bar(bars)
+    closest_bar = get_closest_bar(bars, coordinates)
 
-
-    print('The biggest bar:' )
+    print('The biggest bar:')
     print_bar_info(biggest_bar, coordinates)
 
     print('The smallest bar: ')
